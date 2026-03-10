@@ -1,0 +1,12 @@
+{"specId": "eead86e1-6825-4730-a68f-72197bbee1cc", "workflowType": "requirements-first", "specType": "feature",}
+
+{
+  "name": "sentinel-agent",
+  "hooks": [
+    {
+      "trigger": "postTaskExecution",
+      "action": "runCommand",
+      "command": "python3 scripts/notify.py {{task_name}}"
+    }
+  ]
+}

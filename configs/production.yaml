@@ -1,0 +1,83 @@
+# Production environment configuration for Sentinel-AML
+
+# Application settings
+app:
+  name: "Sentinel-AML"
+  version: "0.1.0"
+  environment: "production"
+  debug: false
+
+# Logging configuration
+logging:
+  level: "INFO"
+  format: "json"
+  enable_correlation_id: true
+  
+# AWS configuration
+aws:
+  region: "${AWS_REGION}"
+  
+# Neptune configuration
+neptune:
+  endpoint: "${NEPTUNE_ENDPOINT}"
+  port: 8182
+  use_ssl: true
+  max_connections: 20
+  connection_timeout: 10
+  
+# Bedrock configuration  
+bedrock:
+  region: "${BEDROCK_REGION}"
+  model_id: "${BEDROCK_MODEL_ID}"
+  max_tokens: 4000
+  temperature: 0.0  # Deterministic for production
+  
+# ML model configuration
+ml:
+  gnn_threshold: 0.7
+  max_graph_nodes: 50000
+  inference_timeout: 30
+  feature_importance_threshold: 0.05
+  
+# API configuration
+api:
+  host: "0.0.0.0"
+  port: 8000
+  rate_limit: 100
+  cors_origins: []  # Restrict in production
+  enable_docs: false  # Disable in production
+  
+# Processing configuration
+processing:
+  max_concurrent_transactions: 1000
+  batch_size: 100
+  retry_attempts: 3
+  retry_backoff: 2.0
+  
+# Security configuration
+security:
+  jwt_secret: "${JWT_SECRET_KEY}"
+  jwt_expiration: 3600  # 1 hour
+  api_key_required: true
+  encryption_key: "${KMS_KEY_ID}"
+  
+# Compliance configuration
+compliance:
+  audit_enabled: true
+  pii_masking: true
+  data_retention_days: 2555  # 7 years
+  immutable_logs: true
+  
+# Monitoring configuration
+monitoring:
+  metrics_enabled: true
+  tracing_enabled: true
+  health_check_interval: 60
+  alerting_enabled: true
+  
+# Production-specific settings
+production:
+  auto_scaling: true
+  high_availability: true
+  backup_enabled: true
+  disaster_recovery: true
