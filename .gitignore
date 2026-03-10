@@ -1,0 +1,46 @@
+# === Kiro Patterns ===
+# Commit your specs and rules, but ignore local agent state if any
+.kiro/state/
+.kiro/temp/
+
+# === Terraform / Infrastructure ===
+.terraform/
+*.tfstate
+*.tfstate.*
+crash.log
+*.tfplan
+# Sensitive variable files
+*.tfvars
+*.tfvars.json
+override.tf
+override.tf.json
+
+# === Python / Data Engineering ===
+__pycache__/
+*.py[cod]
+*$py.class
+.env
+.venv
+env/
+venv/
+build/
+dist/
+.mypy_cache/
+.pytest_cache/
+
+# === Large Data (The IBM Dataset) ===
+# Never push the raw CSVs or Parquet files
+*.csv
+*.parquet
+*.jsonl
+data/raw/
+data/processed/
+
+# === Docker ===
+.docker/
+*.log
+
+# === IDE Specific ===
+.vscode/
+.idea/
+.DS_Store
