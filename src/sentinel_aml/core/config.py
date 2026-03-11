@@ -4,7 +4,7 @@ import os
 from functools import lru_cache
 from typing import Optional
 
-from pydantic import Field, validator
+from pydantic import Field, field_validator
 from pydantic_settings import BaseSettings
 
 
@@ -63,15 +63,17 @@ class Settings(BaseSettings):
     sar_generation_timeout: int = Field(default=60, description="SAR generation timeout in seconds")
     pii_masking_enabled: bool = Field(default=True, description="Enable PII masking")
     
-    @validator("environment")
+    @field_validator("environment")
+    @classmethod
     def validate_environment(cls, v):
         """Validate environment setting."""
-        allowed_environments = ["development", "staging", "production"]
+        allowed_environments = ["development", "staging", "production", "test"]
         if v not in allowed_environments:
             raise ValueError(f"Environment must be one of {allowed_environments}")
         return v
     
-    @validator("log_level")
+    @field_validator("log_level")
+    @classmethod
     def validate_log_level(cls, v):
         """Validate log level setting."""
         allowed_levels = ["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"]
@@ -79,7 +81,8 @@ class Settings(BaseSettings):
             raise ValueError(f"Log level must be one of {allowed_levels}")
         return v.upper()
     
-    @validator("gnn_model_threshold")
+    @field_validator("gnn_model_threshold")
+    @classmethod
     def validate_gnn_threshold(cls, v):
         """Validate GNN model threshold is between 0 and 1."""
         if not 0.0 <= v <= 1.0:
@@ -91,18 +94,6 @@ class Settings(BaseSettings):
         env_file = ".env"
         env_file_encoding = "utf-8"
         case_sensitive = False
-        
-        # Environment variable prefixes
-        env_prefix = ""
-        
-        # Field aliases for environment variables
-        fields = {
-            "neptune_endpoint": {"env": "NEPTUNE_ENDPOINT"},
-            "bedrock_model_id": {"env": "BEDROCK_MODEL_ID"},
-            "aws_account_id": {"env": "AWS_ACCOUNT_ID"},
-            "encryption_key_id": {"env": "KMS_KEY_ID"},
-            "jwt_secret_key": {"env": "JWT_SECRET_KEY"},
-        }
 
 
 @lru_cache()
