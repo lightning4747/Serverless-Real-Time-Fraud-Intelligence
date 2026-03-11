@@ -35,8 +35,8 @@ This implementation plan breaks down the Sentinel-AML system into discrete codin
     - Test serialization and deserialization
     - _Requirements: 1.1, 1.3, 2.1_
 
-- [ ] 3. Implement transaction ingestion Lambda function
-  - [ ] 3.1 Create transaction processor Lambda
+- [x] 3. Implement transaction ingestion Lambda function
+  - [x] 3.1 Create transaction processor Lambda
     - Implement POST /transactions endpoint handler
     - Add transaction schema validation and error handling
     - Integrate with Neptune for data storage
@@ -47,7 +47,7 @@ This implementation plan breaks down the Sentinel-AML system into discrete codin
     - **Property 2: Data integrity - All valid transactions must be stored correctly**
     - **Validates: Requirements 1.1, 1.2, 1.5**
   
-  - [ ] 3.3 Add concurrent request handling and performance optimization
+  - [x] 3.3 Add concurrent request handling and performance optimization
     - Implement connection pooling and batch operations
     - Add request throttling and error recovery
     - _Requirements: 1.4, 9.1, 9.2_
