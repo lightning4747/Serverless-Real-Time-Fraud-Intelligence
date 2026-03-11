@@ -6,7 +6,7 @@ from enum import Enum
 from typing import Any, Dict, List, Optional, Union
 from uuid import uuid4
 
-from pydantic import BaseModel, Field, validator
+from pydantic import BaseModel, Field, field_validator
 
 from sentinel_aml.core.utils import (
     validate_account_id,
@@ -75,19 +75,22 @@ class Account(BaseModel):
     currency: str = Field(default="USD", description="Account currency")
     is_active: bool = Field(default=True, description="Account active status")
     
-    @validator("account_id")
+    @field_validator("account_id")
+    @classmethod
     def validate_account_id_format(cls, v):
         """Validate account ID format."""
         if not validate_account_id(v):
             raise ValueError("Invalid account ID format")
         return v
     
-    @validator("currency")
+    @field_validator("currency")
+    @classmethod
     def validate_currency_format(cls, v):
         """Validate currency code."""
         return validate_currency_code(v)
     
-    @validator("country_code")
+    @field_validator("country_code")
+    @classmethod
     def validate_country_code_format(cls, v):
         """Validate country code format."""
         if v and len(v) != 2:
@@ -125,12 +128,14 @@ class Transaction(BaseModel):
     is_international: bool = Field(default=False, description="International transaction flag")
     risk_flags: List[str] = Field(default_factory=list, description="Risk flags identified")
     
-    @validator("amount")
+    @field_validator("amount")
+    @classmethod
     def validate_amount(cls, v):
         """Validate transaction amount."""
         return validate_transaction_amount(v)
     
-    @validator("currency")
+    @field_validator("currency")
+    @classmethod
     def validate_currency_format(cls, v):
         """Validate currency code."""
         return validate_currency_code(v)
