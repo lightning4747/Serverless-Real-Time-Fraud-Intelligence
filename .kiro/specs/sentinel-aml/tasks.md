@@ -20,7 +20,7 @@ This implementation plan breaks down the Sentinel-AML system into discrete codin
     - Implement schema validation and constraints
     - _Requirements: 2.1, 2.2, 2.3, 2.5_
   
-  - [-] 2.2 Write property tests for graph schema
+  - [x] 2.2 Write property tests for graph schema
     - **Property 1: Schema consistency - All transactions must connect valid accounts**
     - **Validates: Requirements 2.1, 2.5**
   
