@@ -81,8 +81,8 @@ ml = [
     # Machine learning and data science
     "scikit-learn>=1.3.0",
     "torch>=2.1.0",
-    "dgl>=1.1.0",
     "networkx>=3.2.0",
+    # Note: DGL will be installed separately due to version compatibility
 ]
 
 [project.urls]

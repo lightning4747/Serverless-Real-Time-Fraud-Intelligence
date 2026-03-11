@@ -43,7 +43,7 @@ This implementation plan breaks down the Sentinel-AML system into discrete codin
     - Add logging and monitoring instrumentation
     - _Requirements: 1.1, 1.2, 1.3, 1.4, 1.5_
   
-  - [ ]* 3.2 Write property tests for transaction processing
+  - [x]* 3.2 Write property tests for transaction processing
     - **Property 2: Data integrity - All valid transactions must be stored correctly**
     - **Validates: Requirements 1.1, 1.2, 1.5**
   
@@ -52,7 +52,7 @@ This implementation plan breaks down the Sentinel-AML system into discrete codin
     - Add request throttling and error recovery
     - _Requirements: 1.4, 9.1, 9.2_
   
-  - [ ]* 3.4 Write integration tests for transaction ingestion
+  - [x]* 3.4 Write integration tests for transaction ingestion
     - Test end-to-end transaction flow with Neptune
     - Test error scenarios and recovery
     - _Requirements: 1.1, 1.2, 1.3, 1.4_

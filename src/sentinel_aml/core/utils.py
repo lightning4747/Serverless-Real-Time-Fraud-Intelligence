@@ -5,6 +5,7 @@ import uuid
 from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional, Union
 from decimal import Decimal
+import decimal
 import re
 
 from sentinel_aml.core.exceptions import ValidationError
@@ -49,13 +50,19 @@ def mask_account_number(account_number: str) -> str:
 def mask_email(email: str) -> str:
     """Mask email address for logging and display."""
     if "@" not in email:
-        return "*" * len(email)
+        # For invalid emails, use max 12 asterisks
+        return "*" * min(len(email), 12)
     
     local, domain = email.split("@", 1)
-    if len(local) <= 2:
+    if len(local) <= 1:
+        masked_local = "*" * len(local)
+    elif len(local) == 2:
         masked_local = "*" * len(local)
     else:
-        masked_local = local[0] + "*" * (len(local) - 2) + local[-1]
+        # For length > 2: show first and last char, mask the middle with max 5 asterisks
+        middle_length = len(local) - 2
+        asterisk_count = min(middle_length, 5)
+        masked_local = local[0] + "*" * asterisk_count + local[-1]
     
     return f"{masked_local}@{domain}"
 
@@ -71,7 +78,7 @@ def validate_transaction_amount(amount: Union[float, Decimal, str]) -> Decimal:
     """Validate and normalize transaction amount."""
     try:
         decimal_amount = Decimal(str(amount))
-    except (ValueError, TypeError):
+    except (ValueError, TypeError, decimal.InvalidOperation):
         raise ValidationError(f"Invalid transaction amount: {amount}")
     
     if decimal_amount < 0:
@@ -80,8 +87,9 @@ def validate_transaction_amount(amount: Union[float, Decimal, str]) -> Decimal:
     if decimal_amount > Decimal("999999999.99"):
         raise ValidationError("Transaction amount exceeds maximum limit")
     
-    # Round to 2 decimal places for currency
-    return decimal_amount.quantize(Decimal("0.01"))
+    # Round to 2 decimal places for currency using ROUND_HALF_UP
+    from decimal import ROUND_HALF_UP
+    return decimal_amount.quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
 
 
 def validate_currency_code(currency: str) -> str:

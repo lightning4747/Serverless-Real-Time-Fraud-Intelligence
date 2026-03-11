@@ -5,11 +5,11 @@ from contextlib import asynccontextmanager
 from typing import Any, Dict, List, Optional, Union
 from datetime import datetime
 
-from gremlinpython.driver import client, serializer
-from gremlinpython.driver.driver_remote_connection import DriverRemoteConnection
-from gremlinpython.process.anonymous_traversal import traversal
-from gremlinpython.process.graph_traversal import __
-from gremlinpython.process.traversal import T, P
+from gremlin_python.driver import client, serializer
+from gremlin_python.driver.driver_remote_connection import DriverRemoteConnection
+from gremlin_python.process.anonymous_traversal import traversal
+from gremlin_python.process.graph_traversal import __
+from gremlin_python.process.traversal import T, P
 from tenacity import retry, stop_after_attempt, wait_exponential
 
 from sentinel_aml.core.config import get_settings, get_neptune_connection_string
