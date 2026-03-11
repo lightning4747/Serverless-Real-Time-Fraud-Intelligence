@@ -1,0 +1,24 @@
+// Schema validation queries
+
+// Count vertices by label
+g.V().groupCount().by(label)
+
+// Count edges by label
+g.E().groupCount().by(label)
+
+// Validate Account properties
+g.V().hasLabel('Account').has('account_id').count()
+g.V().hasLabel('Account').has('risk_score').count()
+
+// Validate Transaction properties
+g.V().hasLabel('Transaction').has('transaction_id').count()
+g.V().hasLabel('Transaction').has('amount').count()
+
+// Validate SENT_TO edge integrity
+g.E().hasLabel('SENT_TO').has('transaction_id').count()
+g.E().hasLabel('SENT_TO').has('amount').count()
+
+// Check referential integrity
+g.V().hasLabel('Account').out('SENT_TO').hasLabel('Account').count()
+g.V().hasLabel('Account').out('INITIATED').hasLabel('Transaction').count()
+g.V().hasLabel('Account').out('RECEIVED').hasLabel('Transaction').count()

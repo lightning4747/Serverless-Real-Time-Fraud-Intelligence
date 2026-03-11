@@ -1,0 +1,82 @@
+// Neptune Graph Schema Creation for Sentinel-AML
+// Note: Neptune uses different syntax for schema management
+
+// Account vertex schema
+// Required properties: account_id, customer_name_hash, account_type, risk_score, creation_date, currency, is_active
+// Optional properties: customer_id, country_code, is_pep, kyc_status, balance, last_activity_date
+// account_id: string
+// customer_name_hash: string
+// account_type: string
+// risk_score: double
+// creation_date: string
+// currency: string
+// is_active: boolean
+// customer_id: string
+// country_code: string
+// is_pep: boolean
+// kyc_status: string
+// balance: double
+// last_activity_date: string
+
+// Transaction vertex schema
+// Required properties: transaction_id, amount, timestamp, transaction_type, currency, is_cash, is_international
+// Optional properties: description, reference_number, channel, country_code, city, risk_flags
+// transaction_id: string
+// amount: double
+// timestamp: string
+// transaction_type: string
+// currency: string
+// is_cash: boolean
+// is_international: boolean
+// description: string
+// reference_number: string
+// channel: string
+// country_code: string
+// city: string
+// risk_flags: string
+
+// SENT_TO edge schema
+// Description: Direct transaction relationship between accounts
+// From: Account -> To: Account
+// Required properties: transaction_id, amount, timestamp, transaction_type, edge_id, created_at
+
+// INITIATED edge schema
+// Description: Account initiated a transaction
+// From: Account -> To: Transaction
+// Required properties: timestamp
+
+// RECEIVED edge schema
+// Description: Account received a transaction
+// From: Account -> To: Transaction
+// Required properties: timestamp
+
+// Sample Account vertex creation:
+g.addV('Account')
+  .property('account_id', 'ACC123456789')
+  .property('customer_name_hash', 'hashed_customer_name')
+  .property('account_type', 'checking')
+  .property('risk_score', 0.2)
+  .property('creation_date', '2024-01-01T00:00:00Z')
+  .property('currency', 'USD')
+  .property('is_active', true)
+
+// Sample Transaction vertex creation:
+g.addV('Transaction')
+  .property('transaction_id', 'TXN123456789')
+  .property('amount', 1500.00)
+  .property('timestamp', '2024-01-01T12:00:00Z')
+  .property('transaction_type', 'transfer')
+  .property('currency', 'USD')
+  .property('is_cash', false)
+  .property('is_international', false)
+
+// Sample SENT_TO edge creation:
+g.V().has('Account', 'account_id', 'ACC123456789').as('from')
+  .V().has('Account', 'account_id', 'ACC987654321').as('to')
+  .addE('SENT_TO').from('from').to('to')
+  .property('transaction_id', 'TXN123456789')
+  .property('amount', 1500.00)
+  .property('timestamp', '2024-01-01T12:00:00Z')
+  .property('transaction_type', 'transfer')
+  .property('edge_id', 'EDGE123456789')
+  .property('created_at', '2024-01-01T12:00:00Z')
