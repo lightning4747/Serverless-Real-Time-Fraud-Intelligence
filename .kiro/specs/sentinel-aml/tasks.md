@@ -13,18 +13,18 @@ This implementation plan breaks down the Sentinel-AML system into discrete codin
   - Create shared utilities and configuration management
   - _Requirements: All requirements depend on proper project foundation_
 
-- [ ] 2. Implement Neptune graph schema and data models
-  - [ ] 2.1 Define Neptune graph schema for AML data
+- [x] 2. Implement Neptune graph schema and data models
+  - [x] 2.1 Define Neptune graph schema for AML data
     - Create Gremlin schema definitions for Account and Transaction nodes
     - Define SENT_TO edge relationships with required properties
     - Implement schema validation and constraints
     - _Requirements: 2.1, 2.2, 2.3, 2.5_
   
-  - [ ]* 2.2 Write property tests for graph schema
+  - [-] 2.2 Write property tests for graph schema
     - **Property 1: Schema consistency - All transactions must connect valid accounts**
     - **Validates: Requirements 2.1, 2.5**
   
-  - [ ] 2.3 Create Python data models and validation
+  - [x] 2.3 Create Python data models and validation
     - Implement Pydantic models for Account, Transaction, and relationships
     - Add data validation, serialization, and type checking
     - Create Neptune client wrapper with connection management
