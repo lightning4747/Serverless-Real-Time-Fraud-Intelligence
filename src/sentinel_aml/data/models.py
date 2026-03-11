@@ -276,6 +276,18 @@ class SuspiciousActivityReport(BaseModel):
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     updated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     
+    @field_validator("total_amount")
+    @classmethod
+    def validate_total_amount(cls, v):
+        """Validate total amount."""
+        return validate_transaction_amount(v)
+    
+    @field_validator("currency")
+    @classmethod
+    def validate_currency_format(cls, v):
+        """Validate currency code."""
+        return validate_currency_code(v)
+    
     class Config:
         """Pydantic configuration."""
         json_encoders = {

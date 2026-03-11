@@ -77,7 +77,66 @@ def sample_transaction_edge(sample_transaction):
 
 
 @pytest.fixture
-def suspicious_transactions():
+def sample_risk_score():
+    """Sample risk score for testing."""
+    from sentinel_aml.data.models import RiskScore
+    return RiskScore(
+        entity_id="ACC123456789",
+        entity_type="account",
+        risk_score=0.75,
+        model_name="gnn_fraud_detector",
+        model_version="v1.2.3",
+        feature_scores={"velocity": 0.8, "amount_pattern": 0.7},
+        explanation="High risk due to unusual transaction patterns",
+        confidence=0.85,
+        risk_factors=["high_velocity", "unusual_amounts"],
+        pattern_matches=["smurfing_pattern"]
+    )
+
+
+@pytest.fixture
+def sample_alert():
+    """Sample alert for testing."""
+    from sentinel_aml.data.models import Alert, RiskLevel, AlertStatus
+    return Alert(
+        case_id="CASE-20241201-ABC123",
+        title="Suspicious Transaction Pattern",
+        description="Multiple transactions below reporting threshold detected",
+        risk_level=RiskLevel.HIGH,
+        status=AlertStatus.OPEN,
+        account_ids=["ACC123456789", "ACC987654321"],
+        transaction_ids=["TXN001", "TXN002", "TXN003"],
+        risk_score=0.85,
+        suspicious_patterns=["smurfing", "structuring"],
+        investigator_id="INV001"
+    )
+
+
+@pytest.fixture
+def sample_sar():
+    """Sample Suspicious Activity Report for testing."""
+    from sentinel_aml.data.models import SuspiciousActivityReport
+    from decimal import Decimal
+    from datetime import datetime, timezone
+    
+    return SuspiciousActivityReport(
+        case_id="CASE-20241201-ABC123",
+        report_number="SAR-2024-001",
+        subject_accounts=["ACC123456789", "ACC987654321"],
+        subject_names=["hash_customer_1", "hash_customer_2"],
+        activity_description="Structured cash deposits to avoid CTR reporting requirements",
+        suspicious_patterns=["smurfing", "structuring", "cash_intensive"],
+        transaction_summary="Multiple cash deposits under $10,000 over 30-day period",
+        total_amount=Decimal("95000.00"),
+        currency="USD",
+        date_range_start=datetime(2024, 1, 1, tzinfo=timezone.utc),
+        date_range_end=datetime(2024, 1, 31, tzinfo=timezone.utc),
+        regulation_violated=["BSA", "AML"],
+        reporting_reason="Potential money laundering through structured transactions",
+        generated_by_ai=True,
+        ai_model_version="claude-3-sonnet-v1",
+        ai_confidence=0.92
+    )
     """Sample suspicious transaction pattern for testing."""
     base_time = datetime.now(timezone.utc)
     transactions = []
