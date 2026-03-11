@@ -95,9 +95,58 @@ class NeptuneClient(AMLLoggerMixin):
         except Exception as e:
             raise NeptuneConnectionError(f"Connection test failed: {e}")
     
+    async def validate_schema_constraints(self, vertex_label: str, properties: Dict[str, Any]) -> None:
+        """Validate vertex properties against schema constraints."""
+        from sentinel_aml.data.schema import GraphSchema
+        
+        errors = GraphSchema.validate_vertex_properties(vertex_label, properties)
+        if errors:
+            raise NeptuneQueryError(f"Schema validation failed: {'; '.join(errors)}")
+    
+    async def validate_edge_constraints(self, edge_label: str, properties: Dict[str, Any]) -> None:
+        """Validate edge properties against schema constraints."""
+        from sentinel_aml.data.schema import GraphSchema
+        
+        errors = GraphSchema.validate_edge_properties(edge_label, properties)
+        if errors:
+            raise NeptuneQueryError(f"Edge schema validation failed: {'; '.join(errors)}")
+    
+    async def enforce_referential_integrity(self, from_account_id: str, to_account_id: str, 
+                                          transaction_id: str) -> None:
+        """Enforce referential integrity for SENT_TO relationships."""
+        try:
+            async with self.get_connection() as g:
+                # Check if accounts exist
+                from_exists = g.V().hasLabel('Account').has('account_id', from_account_id).hasNext()
+                to_exists = g.V().hasLabel('Account').has('account_id', to_account_id).hasNext()
+                transaction_exists = g.V().hasLabel('Transaction').has('transaction_id', transaction_id).hasNext()
+                
+                if not from_exists:
+                    raise NeptuneQueryError(f"Source account {from_account_id} does not exist")
+                if not to_exists:
+                    raise NeptuneQueryError(f"Destination account {to_account_id} does not exist")
+                if not transaction_exists:
+                    raise NeptuneQueryError(f"Transaction {transaction_id} does not exist")
+                
+        except Exception as e:
+            self.logger.error("Referential integrity check failed", error=str(e))
+            raise NeptuneQueryError(f"Referential integrity check failed: {e}")
+
     async def create_account(self, account: Account) -> str:
         """Create an account vertex in Neptune."""
         try:
+            # Validate schema constraints
+            account_props = {
+                'account_id': account.account_id,
+                'customer_name_hash': account.customer_name,
+                'account_type': account.account_type.value,
+                'risk_score': account.risk_score,
+                'creation_date': account.creation_date.isoformat(),
+                'currency': account.currency,
+                'is_active': account.is_active
+            }
+            await self.validate_schema_constraints('Account', account_props)
+            
             async with self.get_connection() as g:
                 # Check if account already exists
                 existing = g.V().hasLabel('Account').has('account_id', account.account_id).hasNext()
@@ -144,6 +193,18 @@ class NeptuneClient(AMLLoggerMixin):
     async def create_transaction(self, transaction: Transaction) -> str:
         """Create a transaction vertex in Neptune."""
         try:
+            # Validate schema constraints
+            transaction_props = {
+                'transaction_id': transaction.transaction_id,
+                'amount': float(transaction.amount),
+                'timestamp': transaction.timestamp.isoformat(),
+                'transaction_type': transaction.transaction_type.value,
+                'currency': transaction.currency,
+                'is_cash': transaction.is_cash,
+                'is_international': transaction.is_international
+            }
+            await self.validate_schema_constraints('Transaction', transaction_props)
+            
             async with self.get_connection() as g:
                 # Create transaction vertex
                 vertex = (g.addV('Transaction')
@@ -186,6 +247,24 @@ class NeptuneClient(AMLLoggerMixin):
     async def create_transaction_edge(self, edge: TransactionEdge) -> str:
         """Create a SENT_TO edge between accounts through a transaction."""
         try:
+            # Enforce referential integrity
+            await self.enforce_referential_integrity(
+                edge.from_account_id, 
+                edge.to_account_id, 
+                edge.transaction_id
+            )
+            
+            # Validate edge schema constraints
+            edge_props = {
+                'transaction_id': edge.transaction_id,
+                'amount': float(edge.amount),
+                'timestamp': edge.timestamp.isoformat(),
+                'transaction_type': edge.transaction_type.value,
+                'edge_id': edge.edge_id,
+                'created_at': edge.created_at.isoformat()
+            }
+            await self.validate_edge_constraints('SENT_TO', edge_props)
+            
             async with self.get_connection() as g:
                 # Find source and destination accounts
                 from_account = g.V().hasLabel('Account').has('account_id', edge.from_account_id).next()
@@ -208,8 +287,8 @@ class NeptuneClient(AMLLoggerMixin):
                               .next())
                 
                 # Create edges from accounts to transaction
-                g.V(from_account.id).addE('INITIATED').to(g.V(transaction.id)).next()
-                g.V(to_account.id).addE('RECEIVED').to(g.V(transaction.id)).next()
+                g.V(from_account.id).addE('INITIATED').to(g.V(transaction.id)).property('timestamp', edge.timestamp.isoformat()).next()
+                g.V(to_account.id).addE('RECEIVED').to(g.V(transaction.id)).property('timestamp', edge.timestamp.isoformat()).next()
                 
                 self.log_transaction_event(
                     event_type="transaction_edge_created",
