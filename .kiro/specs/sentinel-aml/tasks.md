@@ -30,7 +30,7 @@ This implementation plan breaks down the Sentinel-AML system into discrete codin
     - Create Neptune client wrapper with connection management
     - _Requirements: 1.1, 1.3, 2.1, 2.2, 2.3_
   
-  - [ ]* 2.4 Write unit tests for data models
+  - [x] 2.4 Write unit tests for data models
     - Test validation edge cases and error conditions
     - Test serialization and deserialization
     - _Requirements: 1.1, 1.3, 2.1_
