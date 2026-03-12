@@ -193,23 +193,31 @@ class NeptuneConnectionPool:
                 break
 
 
-# Global connection pool instance
-_connection_pool: Optional[NeptuneConnectionPool] = None
+import threading
+
+# Global connection pools (per-loop)
+_connection_pools: Dict[int, NeptuneConnectionPool] = {}
+# Global throttler (thread-safe, shared across all loops)
+_throttler: Optional['RequestThrottler'] = None
 
 
 async def get_connection_pool() -> NeptuneConnectionPool:
-    """Get or create the global connection pool."""
-    global _connection_pool
+    """Get or create a loop-specific connection pool."""
+    global _connection_pools
     
-    if _connection_pool is None:
+    loop = asyncio.get_event_loop()
+    loop_id = id(loop)
+    
+    if loop_id not in _connection_pools or loop.is_closed():
         settings = get_settings()
-        _connection_pool = NeptuneConnectionPool(
+        pool = NeptuneConnectionPool(
             max_connections=settings.neptune_max_connections,
             min_connections=max(2, settings.neptune_max_connections // 2)
         )
-        await _connection_pool.initialize()
+        await pool.initialize()
+        _connection_pools[loop_id] = pool
     
-    return _connection_pool
+    return _connection_pools[loop_id]
 
 
 class BatchProcessor:
@@ -300,18 +308,18 @@ class BatchProcessor:
 
 
 class RequestThrottler:
-    """Request throttling and rate limiting."""
+    """Request throttling and rate limiting (thread-safe and loop-agnostic)."""
     
     def __init__(self, max_requests_per_second: int = 1000):
         self.max_requests_per_second = max_requests_per_second
         self.request_times: List[float] = []
-        self._lock = asyncio.Lock()
+        self._lock = threading.Lock() # Use threading.Lock for cross-loop safety
     
     async def can_process_request(self) -> bool:
         """Check if request can be processed based on rate limits."""
         current_time = time.time()
         
-        async with self._lock:
+        with self._lock:
             # Remove requests older than 1 second
             self.request_times = [
                 req_time for req_time in self.request_times 
@@ -329,7 +337,7 @@ class RequestThrottler:
         """Get current request rate per second."""
         current_time = time.time()
         
-        async with self._lock:
+        with self._lock:
             # Count requests in last second
             recent_requests = [
                 req_time for req_time in self.request_times 
@@ -337,10 +345,6 @@ class RequestThrottler:
             ]
             
             return len(recent_requests)
-
-
-# Global throttler instance
-_throttler: Optional[RequestThrottler] = None
 
 
 def get_throttler() -> RequestThrottler:
