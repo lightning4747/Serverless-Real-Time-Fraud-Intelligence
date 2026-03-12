@@ -57,7 +57,7 @@ This implementation plan breaks down the Sentinel-AML system into discrete codin
     - Test error scenarios and recovery
     - _Requirements: 1.1, 1.2, 1.3, 1.4_
 
-- [ ] 4. Checkpoint - Ensure transaction ingestion works
+- [x] 4. Checkpoint - Ensure transaction ingestion works
   - Ensure all tests pass, ask the user if questions arise.
 
 - [ ] 5. Implement GNN fraud scoring with Neptune ML
