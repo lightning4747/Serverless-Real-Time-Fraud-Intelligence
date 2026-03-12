@@ -79,13 +79,13 @@ def validate_transaction_amount(amount: Union[float, Decimal, str]) -> Decimal:
     try:
         decimal_amount = Decimal(str(amount))
     except (ValueError, TypeError, decimal.InvalidOperation):
-        raise ValidationError(f"Invalid transaction amount: {amount}")
+        raise ValueError(f"Invalid transaction amount: {amount}")
     
     if decimal_amount < 0:
-        raise ValidationError("Transaction amount cannot be negative")
+        raise ValueError("Transaction amount cannot be negative")
     
     if decimal_amount > Decimal("999999999.99"):
-        raise ValidationError("Transaction amount exceeds maximum limit")
+        raise ValueError("Transaction amount exceeds maximum limit")
     
     # Round to 2 decimal places for currency using ROUND_HALF_UP
     from decimal import ROUND_HALF_UP
@@ -103,7 +103,7 @@ def validate_currency_code(currency: str) -> str:
     
     currency_upper = currency.upper()
     if currency_upper not in valid_currencies:
-        raise ValidationError(f"Invalid currency code: {currency}")
+        raise ValueError(f"Invalid currency code: {currency}")
     
     return currency_upper
 

@@ -75,6 +75,14 @@ class Account(BaseModel):
     currency: str = Field(default="USD", description="Account currency")
     is_active: bool = Field(default=True, description="Account active status")
     
+    @field_validator("customer_name")
+    @classmethod
+    def validate_customer_name(cls, v):
+        """Validate customer name is not empty or whitespace only."""
+        if not v or not v.strip():
+            raise ValueError("Customer name cannot be empty or whitespace only")
+        return v.strip()
+    
     @field_validator("account_id")
     @classmethod
     def validate_account_id_format(cls, v):
@@ -93,8 +101,10 @@ class Account(BaseModel):
     @classmethod
     def validate_country_code_format(cls, v):
         """Validate country code format."""
-        if v and len(v) != 2:
+        if v is not None and v != "" and len(v) != 2:
             raise ValueError("Country code must be 2 characters (ISO 3166-1)")
+        if v == "":
+            raise ValueError("Country code must be 2 characters")
         return v.upper() if v else v
     
     model_config = ConfigDict(
@@ -146,6 +156,14 @@ class Transaction(BaseModel):
             Decimal: lambda v: float(v),
         }
     )
+    
+    def model_dump(self, **kwargs):
+        """Custom serialization to handle Decimal conversion."""
+        data = super().model_dump(**kwargs)
+        # Convert Decimal fields to float
+        if 'amount' in data and isinstance(data['amount'], Decimal):
+            data['amount'] = float(data['amount'])
+        return data
 
 
 class TransactionEdge(BaseModel):
@@ -294,3 +312,11 @@ class SuspiciousActivityReport(BaseModel):
             Decimal: lambda v: float(v),
         }
     )
+    
+    def model_dump(self, **kwargs):
+        """Custom serialization to handle Decimal conversion."""
+        data = super().model_dump(**kwargs)
+        # Convert Decimal fields to float
+        if 'total_amount' in data and isinstance(data['total_amount'], Decimal):
+            data['total_amount'] = float(data['total_amount'])
+        return data

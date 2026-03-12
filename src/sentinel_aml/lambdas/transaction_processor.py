@@ -356,11 +356,21 @@ async def _lambda_handler_internal(
     # Parse request body
     try:
         if not event.get("body"):
-            raise ValidationError("Request body is required")
+            return create_error_response(
+                400,
+                "MISSING_REQUEST_BODY",
+                "Request body is required",
+                correlation_id=correlation_id
+            )
         
         body = json.loads(event["body"])
         if not isinstance(body, dict):
-            raise ValidationError("Request body must be a JSON object")
+            return create_error_response(
+                400,
+                "INVALID_REQUEST_BODY",
+                "Request body must be a JSON object",
+                correlation_id=correlation_id
+            )
     
     except json.JSONDecodeError as e:
         return create_error_response(
