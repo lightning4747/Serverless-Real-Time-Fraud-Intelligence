@@ -52,7 +52,7 @@ This implementation plan breaks down the Sentinel-AML system into discrete codin
     - Add request throttling and error recovery
     - _Requirements: 1.4, 9.1, 9.2_
   
-  - [x]* 3.4 Write integration tests for transaction ingestion
+  - [x] 3.4 Write integration tests for transaction ingestion
     - Test end-to-end transaction flow with Neptune
     - Test error scenarios and recovery
     - _Requirements: 1.1, 1.2, 1.3, 1.4_
