@@ -93,7 +93,7 @@ This implementation plan breaks down the Sentinel-AML system into discrete codin
     - Create structured report output with confidence scores
     - _Requirements: 4.1, 4.2, 4.3, 4.4, 4.5_
   
-  - [ ] 6.2 Write property tests for SAR generation
+  - [x] 6.2 Write property tests for SAR generation
     - **Property 5: Report completeness - All SARs must include required FinCEN fields**
     - **Validates: Requirements 4.2, 4.3**
     - **Property 6: PII protection - Generated reports must not contain raw PII**
