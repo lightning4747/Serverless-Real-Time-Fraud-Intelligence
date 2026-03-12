@@ -6,7 +6,7 @@ from enum import Enum
 from typing import Any, Dict, List, Optional, Union
 from uuid import uuid4
 
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, Field, field_validator, ConfigDict
 
 from sentinel_aml.core.utils import (
     validate_account_id,
@@ -75,6 +75,14 @@ class Account(BaseModel):
     currency: str = Field(default="USD", description="Account currency")
     is_active: bool = Field(default=True, description="Account active status")
     
+    @field_validator("customer_name")
+    @classmethod
+    def validate_customer_name(cls, v):
+        """Validate customer name is not empty or whitespace only."""
+        if not v or not v.strip():
+            raise ValueError("Customer name cannot be empty or whitespace only")
+        return v.strip()
+    
     @field_validator("account_id")
     @classmethod
     def validate_account_id_format(cls, v):
@@ -93,16 +101,18 @@ class Account(BaseModel):
     @classmethod
     def validate_country_code_format(cls, v):
         """Validate country code format."""
-        if v and len(v) != 2:
+        if v is not None and v != "" and len(v) != 2:
             raise ValueError("Country code must be 2 characters (ISO 3166-1)")
+        if v == "":
+            raise ValueError("Country code must be 2 characters")
         return v.upper() if v else v
     
-    class Config:
-        """Pydantic configuration."""
-        json_encoders = {
+    model_config = ConfigDict(
+        json_encoders={
             datetime: lambda v: v.isoformat(),
             Decimal: lambda v: float(v),
         }
+    )
 
 
 class Transaction(BaseModel):
@@ -140,12 +150,20 @@ class Transaction(BaseModel):
         """Validate currency code."""
         return validate_currency_code(v)
     
-    class Config:
-        """Pydantic configuration."""
-        json_encoders = {
+    model_config = ConfigDict(
+        json_encoders={
             datetime: lambda v: v.isoformat(),
             Decimal: lambda v: float(v),
         }
+    )
+    
+    def model_dump(self, **kwargs):
+        """Custom serialization to handle Decimal conversion."""
+        data = super().model_dump(**kwargs)
+        # Convert Decimal fields to float
+        if 'amount' in data and isinstance(data['amount'], Decimal):
+            data['amount'] = float(data['amount'])
+        return data
 
 
 class TransactionEdge(BaseModel):
@@ -164,12 +182,12 @@ class TransactionEdge(BaseModel):
     edge_id: str = Field(default_factory=lambda: str(uuid4()), description="Unique edge ID")
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     
-    class Config:
-        """Pydantic configuration."""
-        json_encoders = {
+    model_config = ConfigDict(
+        json_encoders={
             datetime: lambda v: v.isoformat(),
             Decimal: lambda v: float(v),
         }
+    )
 
 
 class RiskScore(BaseModel):
@@ -193,11 +211,11 @@ class RiskScore(BaseModel):
     risk_factors: List[str] = Field(default_factory=list, description="Identified risk factors")
     pattern_matches: List[str] = Field(default_factory=list, description="Matched suspicious patterns")
     
-    class Config:
-        """Pydantic configuration."""
-        json_encoders = {
+    model_config = ConfigDict(
+        json_encoders={
             datetime: lambda v: v.isoformat(),
         }
+    )
 
 
 class Alert(BaseModel):
@@ -230,11 +248,11 @@ class Alert(BaseModel):
     investigator_id: Optional[str] = Field(default=None, description="Assigned investigator")
     investigation_notes: Optional[str] = Field(default=None, description="Investigation notes")
     
-    class Config:
-        """Pydantic configuration."""
-        json_encoders = {
+    model_config = ConfigDict(
+        json_encoders={
             datetime: lambda v: v.isoformat(),
         }
+    )
 
 
 class SuspiciousActivityReport(BaseModel):
@@ -288,9 +306,17 @@ class SuspiciousActivityReport(BaseModel):
         """Validate currency code."""
         return validate_currency_code(v)
     
-    class Config:
-        """Pydantic configuration."""
-        json_encoders = {
+    model_config = ConfigDict(
+        json_encoders={
             datetime: lambda v: v.isoformat(),
             Decimal: lambda v: float(v),
         }
+    )
+    
+    def model_dump(self, **kwargs):
+        """Custom serialization to handle Decimal conversion."""
+        data = super().model_dump(**kwargs)
+        # Convert Decimal fields to float
+        if 'total_amount' in data and isinstance(data['total_amount'], Decimal):
+            data['total_amount'] = float(data['total_amount'])
+        return data

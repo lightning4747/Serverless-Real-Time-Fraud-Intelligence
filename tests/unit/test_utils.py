@@ -106,7 +106,7 @@ class TestTransactionAmountValidation:
         ]
         
         for invalid_amount in invalid_amounts:
-            with pytest.raises(ValidationError):
+            with pytest.raises(ValueError):
                 validate_transaction_amount(invalid_amount)
     
     def test_scientific_notation(self):
@@ -154,7 +154,7 @@ class TestCurrencyCodeValidation:
         ]
         
         for invalid_currency in invalid_currencies:
-            with pytest.raises(ValidationError, match="Invalid currency code"):
+            with pytest.raises(ValueError, match="Invalid currency code"):
                 validate_currency_code(invalid_currency)
 
 

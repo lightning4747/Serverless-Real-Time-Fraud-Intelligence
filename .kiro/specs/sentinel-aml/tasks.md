@@ -35,65 +35,65 @@ This implementation plan breaks down the Sentinel-AML system into discrete codin
     - Test serialization and deserialization
     - _Requirements: 1.1, 1.3, 2.1_
 
-- [ ] 3. Implement transaction ingestion Lambda function
-  - [ ] 3.1 Create transaction processor Lambda
+- [x] 3. Implement transaction ingestion Lambda function
+  - [x] 3.1 Create transaction processor Lambda
     - Implement POST /transactions endpoint handler
     - Add transaction schema validation and error handling
     - Integrate with Neptune for data storage
     - Add logging and monitoring instrumentation
     - _Requirements: 1.1, 1.2, 1.3, 1.4, 1.5_
   
-  - [ ]* 3.2 Write property tests for transaction processing
+  - [x] 3.2 Write property tests for transaction processing
     - **Property 2: Data integrity - All valid transactions must be stored correctly**
     - **Validates: Requirements 1.1, 1.2, 1.5**
   
-  - [ ] 3.3 Add concurrent request handling and performance optimization
+  - [x] 3.3 Add concurrent request handling and performance optimization
     - Implement connection pooling and batch operations
     - Add request throttling and error recovery
     - _Requirements: 1.4, 9.1, 9.2_
   
-  - [ ]* 3.4 Write integration tests for transaction ingestion
+  - [x] 3.4 Write integration tests for transaction ingestion
     - Test end-to-end transaction flow with Neptune
     - Test error scenarios and recovery
     - _Requirements: 1.1, 1.2, 1.3, 1.4_
 
-- [ ] 4. Checkpoint - Ensure transaction ingestion works
+- [x] 4. Checkpoint - Ensure transaction ingestion works
   - Ensure all tests pass, ask the user if questions arise.
 
-- [ ] 5. Implement GNN fraud scoring with Neptune ML
-  - [ ] 5.1 Create GNN model training pipeline
+- [x] 5. Implement GNN fraud scoring with Neptune ML
+  - [x] 5.1 Create GNN model training pipeline
     - Implement Neptune ML integration for graph neural networks
     - Create feature extraction from transaction patterns
     - Set up model training with smurfing pattern detection
     - _Requirements: 3.1, 3.2, 3.3, 3.5_
   
-  - [ ] 5.2 Implement fraud scoring Lambda function
+  - [x] 5.2 Implement fraud scoring Lambda function
     - Create Lambda to trigger GNN analysis on transaction clusters
     - Implement risk score calculation (0.0-1.0 range)
     - Add suspicious activity flagging logic (threshold > 0.7)
     - Integrate with Neptune ML for real-time inference
     - _Requirements: 3.1, 3.2, 3.4, 3.5_
   
-  - [ ]* 5.3 Write property tests for fraud scoring
+  - [x] 5.3 Write property tests for fraud scoring
     - **Property 3: Score bounds - All risk scores must be between 0.0 and 1.0**
     - **Validates: Requirements 3.1**
     - **Property 4: Pattern detection - Known smurfing patterns must score above 0.7**
     - **Validates: Requirements 3.2, 3.3**
   
-  - [ ]* 5.4 Write unit tests for GNN scoring logic
+  - [x] 5.4 Write unit tests for GNN scoring logic
     - Test feature extraction and score calculation
     - Test edge cases and error handling
     - _Requirements: 3.1, 3.2, 3.4_
 
 - [ ] 6. Implement SAR generation with Amazon Bedrock
-  - [ ] 6.1 Create SAR generator Lambda function
+  - [x] 6.1 Create SAR generator Lambda function
     - Integrate with Amazon Bedrock Claude 3 for report generation
     - Implement prompt engineering for FinCEN SAR format
     - Add PII redaction and data privacy controls
     - Create structured report output with confidence scores
     - _Requirements: 4.1, 4.2, 4.3, 4.4, 4.5_
   
-  - [ ]* 6.2 Write property tests for SAR generation
+  - [ ] 6.2 Write property tests for SAR generation
     - **Property 5: Report completeness - All SARs must include required FinCEN fields**
     - **Validates: Requirements 4.2, 4.3**
     - **Property 6: PII protection - Generated reports must not contain raw PII**
@@ -105,7 +105,7 @@ This implementation plan breaks down the Sentinel-AML system into discrete codin
     - Create confidence scoring for suspicious patterns
     - _Requirements: 4.2, 4.3, 4.5, 7.1, 7.3_
   
-  - [ ]* 6.4 Write integration tests for Bedrock integration
+  - [ ] 6.4 Write integration tests for Bedrock integration
     - Test end-to-end SAR generation workflow
     - Test error handling and retry logic
     - _Requirements: 4.1, 4.2, 4.5_
@@ -123,11 +123,11 @@ This implementation plan breaks down the Sentinel-AML system into discrete codin
     - Implement workflow status tracking and notifications
     - _Requirements: 5.1, 5.2, 5.5_
   
-  - [ ]* 7.3 Write property tests for orchestration
+  - [ ] 7.3 Write property tests for orchestration
     - **Property 7: Workflow completeness - All suspicious transactions must trigger complete workflow**
     - **Validates: Requirements 5.1, 5.2**
   
-  - [ ]* 7.4 Write integration tests for Step Functions
+  - [ ] 7.4 Write integration tests for Step Functions
     - Test complete end-to-end workflow execution
     - Test error scenarios and retry behavior
     - _Requirements: 5.1, 5.2, 5.3, 5.4_
@@ -149,13 +149,13 @@ This implementation plan breaks down the Sentinel-AML system into discrete codin
     - Implement proper HTTP status codes and error responses
     - _Requirements: 6.2, 6.3, 6.4, 6.6_
   
-  - [ ]* 9.3 Write property tests for API endpoints
+  - [ ] 9.3 Write property tests for API endpoints
     - **Property 8: Authentication - All protected endpoints must require valid API keys**
     - **Validates: Requirements 6.4, 6.6**
     - **Property 9: Rate limiting - API calls must respect configured limits**
     - **Validates: Requirements 6.5**
   
-  - [ ]* 9.4 Write integration tests for API Gateway
+  - [ ] 9.4 Write integration tests for API Gateway
     - Test all endpoints with various authentication scenarios
     - Test rate limiting and error responses
     - _Requirements: 6.1, 6.2, 6.3, 6.4, 6.5, 6.6_
@@ -179,7 +179,7 @@ This implementation plan breaks down the Sentinel-AML system into discrete codin
     - Create user management and authorization
     - _Requirements: 8.4_
   
-  - [ ]* 10.4 Write security tests
+  - [ ] 10.4 Write security tests
     - Test encryption and data protection mechanisms
     - Test access controls and authorization
     - _Requirements: 8.1, 8.2, 8.3, 8.4_
@@ -197,7 +197,7 @@ This implementation plan breaks down the Sentinel-AML system into discrete codin
     - Implement efficient data processing pipelines
     - _Requirements: 2.4, 3.4, 9.1, 9.5_
   
-  - [ ]* 11.3 Write performance tests
+  - [ ] 11.3 Write performance tests
     - Test system under load with concurrent transactions
     - Validate auto-scaling behavior
     - _Requirements: 9.1, 9.2, 9.3, 9.5_
@@ -222,7 +222,7 @@ This implementation plan breaks down the Sentinel-AML system into discrete codin
     - Create notification preferences and routing
     - _Requirements: 10.5_
   
-  - [ ]* 12.4 Write UI integration tests
+  - [ ] 12.4 Write UI integration tests
     - Test dashboard functionality and user workflows
     - Test notification delivery and timing
     - _Requirements: 10.1, 10.2, 10.3, 10.5_
@@ -240,7 +240,7 @@ This implementation plan breaks down the Sentinel-AML system into discrete codin
     - Add model performance monitoring and alerting
     - _Requirements: 11.4, 11.5_
   
-  - [ ]* 13.3 Write model training tests
+  - [ ] 13.3 Write model training tests
     - Test training pipeline and model validation
     - Test A/B testing framework
     - _Requirements: 11.1, 11.2, 11.3_
@@ -258,7 +258,7 @@ This implementation plan breaks down the Sentinel-AML system into discrete codin
     - Add configuration backup and restore
     - _Requirements: 12.3, 12.4_
   
-  - [ ]* 14.3 Write configuration tests
+  - [ ] 14.3 Write configuration tests
     - Test configuration validation and application
     - Test custom rules and thresholds
     - _Requirements: 12.1, 12.2, 12.3_
@@ -276,7 +276,7 @@ This implementation plan breaks down the Sentinel-AML system into discrete codin
     - Create deployment validation and rollback procedures
     - _Requirements: All requirements_
   
-  - [ ]* 15.3 Write deployment tests
+  - [ ] 15.3 Write deployment tests
     - Test infrastructure provisioning and configuration
     - Test deployment automation and rollback
     - _Requirements: All requirements_
@@ -294,7 +294,7 @@ This implementation plan breaks down the Sentinel-AML system into discrete codin
     - Test concurrent user scenarios
     - _Requirements: 9.1, 9.2, 9.3, 9.5_
   
-  - [ ]* 16.3 Write comprehensive system tests
+  - [ ] 16.3 Write comprehensive system tests
     - Test all user scenarios and workflows
     - Test compliance and audit requirements
     - _Requirements: All requirements_

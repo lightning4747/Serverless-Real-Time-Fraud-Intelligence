@@ -4,7 +4,7 @@ import os
 from functools import lru_cache
 from typing import Optional
 
-from pydantic import Field, field_validator
+from pydantic import Field, field_validator, ConfigDict
 from pydantic_settings import BaseSettings
 
 
@@ -89,11 +89,11 @@ class Settings(BaseSettings):
             raise ValueError("GNN model threshold must be between 0.0 and 1.0")
         return v
     
-    class Config:
-        """Pydantic configuration."""
-        env_file = ".env"
-        env_file_encoding = "utf-8"
-        case_sensitive = False
+    model_config = ConfigDict(
+        env_file=".env",
+        env_file_encoding="utf-8",
+        case_sensitive=False
+    )
 
 
 @lru_cache()

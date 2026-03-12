@@ -11,7 +11,7 @@ from typing import Dict, List, Any
 from unittest.mock import Mock, AsyncMock, patch
 
 from hypothesis import given, strategies as st, assume, settings, HealthCheck
-from hypothesis.stateful import RuleBasedStateMachine, rule, initialize, invariant
+from hypothesis.stateful import RuleBasedStateMachine, rule, initialize, invariant, run_state_machine_as_test
 
 from sentinel_aml.data.models import Account, Transaction, TransactionEdge, AccountType, TransactionType
 from sentinel_aml.data.schema import GraphSchema
@@ -23,8 +23,8 @@ from sentinel_aml.core.exceptions import NeptuneQueryError
 @st.composite
 def account_strategy(draw):
     """Generate valid Account instances."""
-    account_id = draw(st.text(min_size=8, max_size=20, alphabet=st.characters(whitelist_categories=('Lu', 'Ll', 'Nd'))))
-    customer_name = draw(st.text(min_size=2, max_size=50, alphabet=st.characters(whitelist_categories=('Lu', 'Ll', ' '))))
+    account_id = draw(st.text(min_size=5, max_size=17, alphabet=st.characters(whitelist_categories=('Lu', 'Ll', 'Nd'))))
+    customer_name = draw(st.text(min_size=2, max_size=50, alphabet=st.characters(whitelist_categories=('Lu', 'Ll')) | st.just(' ')))
     account_type = draw(st.sampled_from(AccountType))
     risk_score = draw(st.floats(min_value=0.0, max_value=1.0, allow_nan=False, allow_infinity=False))
     
@@ -355,13 +355,10 @@ class GraphConsistencyStateMachine(RuleBasedStateMachine):
 class TestGraphConsistencyStateful:
     """Stateful property tests for graph consistency."""
     
-    @settings(max_examples=50, suppress_health_check=[HealthCheck.too_slow])
     def test_graph_consistency_over_time(self):
         """Test that graph maintains consistency as entities are added."""
         # Run the state machine
-        GraphConsistencyStateMachine.TestCase.settings = settings(max_examples=20)
-        test_case = GraphConsistencyStateMachine.TestCase()
-        test_case.runTest()
+        run_state_machine_as_test(GraphConsistencyStateMachine, settings=settings(max_examples=20))
 
 
 @pytest.mark.property

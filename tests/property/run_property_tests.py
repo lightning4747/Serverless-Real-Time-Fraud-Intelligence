@@ -33,6 +33,7 @@ def run_property_tests():
     cmd = [
         sys.executable, "-m", "pytest",
         "tests/property/test_graph_schema_properties.py",
+        "tests/property/test_transaction_processing_properties.py",
         "-v",
         "-m", "property",
         "--tb=short",
