@@ -60,33 +60,33 @@ This implementation plan breaks down the Sentinel-AML system into discrete codin
 - [x] 4. Checkpoint - Ensure transaction ingestion works
   - Ensure all tests pass, ask the user if questions arise.
 
-- [-] 5. Implement GNN fraud scoring with Neptune ML
-  - [ ] 5.1 Create GNN model training pipeline
+- [x] 5. Implement GNN fraud scoring with Neptune ML
+  - [x] 5.1 Create GNN model training pipeline
     - Implement Neptune ML integration for graph neural networks
     - Create feature extraction from transaction patterns
     - Set up model training with smurfing pattern detection
     - _Requirements: 3.1, 3.2, 3.3, 3.5_
   
-  - [ ] 5.2 Implement fraud scoring Lambda function
+  - [x] 5.2 Implement fraud scoring Lambda function
     - Create Lambda to trigger GNN analysis on transaction clusters
     - Implement risk score calculation (0.0-1.0 range)
     - Add suspicious activity flagging logic (threshold > 0.7)
     - Integrate with Neptune ML for real-time inference
     - _Requirements: 3.1, 3.2, 3.4, 3.5_
   
-  - [ ] 5.3 Write property tests for fraud scoring
+  - [x] 5.3 Write property tests for fraud scoring
     - **Property 3: Score bounds - All risk scores must be between 0.0 and 1.0**
     - **Validates: Requirements 3.1**
     - **Property 4: Pattern detection - Known smurfing patterns must score above 0.7**
     - **Validates: Requirements 3.2, 3.3**
   
-  - [ ] 5.4 Write unit tests for GNN scoring logic
+  - [x] 5.4 Write unit tests for GNN scoring logic
     - Test feature extraction and score calculation
     - Test edge cases and error handling
     - _Requirements: 3.1, 3.2, 3.4_
 
 - [ ] 6. Implement SAR generation with Amazon Bedrock
-  - [ ] 6.1 Create SAR generator Lambda function
+  - [x] 6.1 Create SAR generator Lambda function
     - Integrate with Amazon Bedrock Claude 3 for report generation
     - Implement prompt engineering for FinCEN SAR format
     - Add PII redaction and data privacy controls
