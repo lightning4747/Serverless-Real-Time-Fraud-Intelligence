@@ -327,15 +327,167 @@ def create_success_response(
     return response
 
 
+async def _lambda_handler_internal(
+    event: Dict[str, Any], 
+    correlation_id: str,
+    start_time: float
+) -> Dict[str, Any]:
+    """Internal async handler for transaction ingestion."""
+    # Check rate limiting (requirement 1.4: handle up to 1000 transactions per second)
+    throttler = get_throttler()
+    
+    can_process = await throttler.can_process_request()
+    if not can_process:
+        current_rate = await throttler.get_current_rate()
+        logger.warning(
+            "Request throttled due to rate limit",
+            current_rate=current_rate,
+            max_rate=throttler.max_requests_per_second
+        )
+        
+        return create_error_response(
+            429,
+            "RATE_LIMIT_EXCEEDED",
+            f"Rate limit exceeded. Current rate: {current_rate}/sec, Max: {throttler.max_requests_per_second}/sec",
+            details={"current_rate": current_rate, "max_rate": throttler.max_requests_per_second},
+            correlation_id=correlation_id
+        )
+    
+    # Parse request body
+    try:
+        if not event.get("body"):
+            raise ValidationError("Request body is required")
+        
+        body = json.loads(event["body"])
+        if not isinstance(body, dict):
+            raise ValidationError("Request body must be a JSON object")
+    
+    except json.JSONDecodeError as e:
+        return create_error_response(
+            400,
+            "INVALID_JSON",
+            f"Invalid JSON in request body: {str(e)}",
+            correlation_id=correlation_id
+        )
+    
+    # Validate schema within 100ms requirement
+    schema_validation_start = time.time()
+    
+    try:
+        transaction_request = TransactionRequest(body)
+    except ValidationError as e:
+        schema_validation_time = (time.time() - schema_validation_start) * 1000
+        logger.warning(
+            "Schema validation failed",
+            validation_time_ms=schema_validation_time,
+            error=e.message,
+            error_code=e.error_code
+        )
+        
+        return create_error_response(
+            400,
+            e.error_code,
+            e.message,
+            details=e.details,
+            correlation_id=correlation_id
+        )
+    
+    schema_validation_time = (time.time() - schema_validation_start) * 1000
+    
+    # Check if schema validation exceeded 100ms requirement
+    if schema_validation_time > 100:
+        logger.warning(
+            "Schema validation exceeded 100ms requirement",
+            validation_time_ms=schema_validation_time
+        )
+    
+    # Process transaction within 500ms requirement with circuit breaker
+    processing_start = time.time()
+    
+    # Initialize circuit breaker for Neptune operations
+    circuit_breaker = CircuitBreaker(
+        failure_threshold=5,
+        recovery_timeout=60,
+        expected_exception=(NeptuneConnectionError, NeptuneQueryError, ProcessingError)
+    )
+    
+    try:
+        # Run async transaction processing with circuit breaker protection
+        result = await circuit_breaker.call(process_transaction, transaction_request)
+    
+    except (NeptuneConnectionError, NeptuneQueryError) as e:
+        processing_time = (time.time() - processing_start) * 1000
+        logger.error(
+            "Neptune database error",
+            processing_time_ms=processing_time,
+            error=str(e)
+        )
+        
+        return create_error_response(
+            503,
+            "DATABASE_ERROR",
+            "Database temporarily unavailable. Please try again later.",
+            details={"processing_time_ms": processing_time},
+            correlation_id=correlation_id
+        )
+    
+    except ProcessingError as e:
+        processing_time = (time.time() - processing_start) * 1000
+        logger.error(
+            "Transaction processing error",
+            processing_time_ms=processing_time,
+            error=str(e)
+        )
+        
+        # Check if circuit breaker is open
+        cb_state = await circuit_breaker.get_state()
+        if cb_state["state"] == "OPEN":
+            return create_error_response(
+                503,
+                "SERVICE_UNAVAILABLE",
+                "Service temporarily unavailable due to repeated failures. Please try again later.",
+                details={"circuit_breaker_state": cb_state, "processing_time_ms": processing_time},
+                correlation_id=correlation_id
+            )
+        
+        return create_error_response(
+            500,
+            "PROCESSING_ERROR",
+            "Failed to process transaction. Please try again later.",
+            details={"processing_time_ms": processing_time},
+            correlation_id=correlation_id
+        )
+    
+    processing_time = (time.time() - processing_start) * 1000
+    total_time = (time.time() - start_time) * 1000
+    
+    # Check if processing exceeded 500ms requirement
+    if processing_time > 500:
+        logger.warning(
+            "Transaction processing exceeded 500ms requirement",
+            processing_time_ms=processing_time
+        )
+    
+    # Add timing information to result
+    result.update({
+        "schema_validation_time_ms": schema_validation_time,
+        "total_processing_time_ms": total_time
+    })
+    
+    logger.info(
+        "Transaction ingestion completed successfully",
+        transaction_id=result["transaction_id"],
+        total_time_ms=total_time,
+        schema_validation_ms=schema_validation_time,
+        processing_time_ms=processing_time
+    )
+    
+    return create_success_response(result, correlation_id)
+
+
 def lambda_handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
     """
     AWS Lambda handler for transaction ingestion.
-    
-    Handles POST /transactions requests with the following requirements:
-    - Validates transaction schema within 100ms
-    - Stores valid transactions in Neptune within 500ms
-    - Returns descriptive error messages for invalid data (HTTP 400)
-    - Handles concurrent requests up to 1000 transactions per second
     """
     start_time = time.time()
     
@@ -379,175 +531,17 @@ def lambda_handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                 "Only POST method is allowed for transaction ingestion",
                 correlation_id=correlation_id
             )
-        
-        # Check rate limiting (requirement 1.4: handle up to 1000 transactions per second)
-        throttler = get_throttler()
+
+        # Execute using a fresh managed event loop
         loop = asyncio.new_event_loop()
         asyncio.set_event_loop(loop)
-        
         try:
-            can_process = loop.run_until_complete(throttler.can_process_request())
-            if not can_process:
-                current_rate = loop.run_until_complete(throttler.get_current_rate())
-                logger.warning(
-                    "Request throttled due to rate limit",
-                    current_rate=current_rate,
-                    max_rate=throttler.max_requests_per_second
-                )
-                
-                return create_error_response(
-                    429,
-                    "RATE_LIMIT_EXCEEDED",
-                    f"Rate limit exceeded. Current rate: {current_rate}/sec, Max: {throttler.max_requests_per_second}/sec",
-                    details={"current_rate": current_rate, "max_rate": throttler.max_requests_per_second},
-                    correlation_id=correlation_id
-                )
+            return loop.run_until_complete(
+                _lambda_handler_internal(event, correlation_id, start_time)
+            )
         finally:
             loop.close()
-        
-        # Parse request body
-        try:
-            if not event.get("body"):
-                raise ValidationError("Request body is required")
             
-            body = json.loads(event["body"])
-            if not isinstance(body, dict):
-                raise ValidationError("Request body must be a JSON object")
-        
-        except json.JSONDecodeError as e:
-            return create_error_response(
-                400,
-                "INVALID_JSON",
-                f"Invalid JSON in request body: {str(e)}",
-                correlation_id=correlation_id
-            )
-        
-        # Validate schema within 100ms requirement
-        schema_validation_start = time.time()
-        
-        try:
-            transaction_request = TransactionRequest(body)
-        except ValidationError as e:
-            schema_validation_time = (time.time() - schema_validation_start) * 1000
-            logger.warning(
-                "Schema validation failed",
-                validation_time_ms=schema_validation_time,
-                error=e.message,
-                error_code=e.error_code
-            )
-            
-            return create_error_response(
-                400,
-                e.error_code,
-                e.message,
-                details=e.details,
-                correlation_id=correlation_id
-            )
-        
-        schema_validation_time = (time.time() - schema_validation_start) * 1000
-        
-        # Check if schema validation exceeded 100ms requirement
-        if schema_validation_time > 100:
-            logger.warning(
-                "Schema validation exceeded 100ms requirement",
-                validation_time_ms=schema_validation_time
-            )
-        
-        # Process transaction within 500ms requirement with circuit breaker
-        processing_start = time.time()
-        
-        # Initialize circuit breaker for Neptune operations
-        circuit_breaker = CircuitBreaker(
-            failure_threshold=5,
-            recovery_timeout=60,
-            expected_exception=(NeptuneConnectionError, NeptuneQueryError, ProcessingError)
-        )
-        
-        try:
-            # Run async transaction processing with circuit breaker protection
-            loop = asyncio.new_event_loop()
-            asyncio.set_event_loop(loop)
-            try:
-                result = loop.run_until_complete(
-                    circuit_breaker.call(process_transaction, transaction_request)
-                )
-            finally:
-                loop.close()
-        
-        except (NeptuneConnectionError, NeptuneQueryError) as e:
-            processing_time = (time.time() - processing_start) * 1000
-            logger.error(
-                "Neptune database error",
-                processing_time_ms=processing_time,
-                error=str(e)
-            )
-            
-            return create_error_response(
-                503,
-                "DATABASE_ERROR",
-                "Database temporarily unavailable. Please try again later.",
-                details={"processing_time_ms": processing_time},
-                correlation_id=correlation_id
-            )
-        
-        except ProcessingError as e:
-            processing_time = (time.time() - processing_start) * 1000
-            logger.error(
-                "Transaction processing error",
-                processing_time_ms=processing_time,
-                error=str(e)
-            )
-            
-            # Check if circuit breaker is open
-            loop = asyncio.new_event_loop()
-            asyncio.set_event_loop(loop)
-            try:
-                cb_state = loop.run_until_complete(circuit_breaker.get_state())
-                if cb_state["state"] == "OPEN":
-                    return create_error_response(
-                        503,
-                        "SERVICE_UNAVAILABLE",
-                        "Service temporarily unavailable due to repeated failures. Please try again later.",
-                        details={"circuit_breaker_state": cb_state, "processing_time_ms": processing_time},
-                        correlation_id=correlation_id
-                    )
-            finally:
-                loop.close()
-            
-            return create_error_response(
-                500,
-                "PROCESSING_ERROR",
-                "Failed to process transaction. Please try again later.",
-                details={"processing_time_ms": processing_time},
-                correlation_id=correlation_id
-            )
-        
-        processing_time = (time.time() - processing_start) * 1000
-        total_time = (time.time() - start_time) * 1000
-        
-        # Check if processing exceeded 500ms requirement
-        if processing_time > 500:
-            logger.warning(
-                "Transaction processing exceeded 500ms requirement",
-                processing_time_ms=processing_time
-            )
-        
-        # Add timing information to result
-        result.update({
-            "schema_validation_time_ms": schema_validation_time,
-            "total_processing_time_ms": total_time
-        })
-        
-        logger.info(
-            "Transaction ingestion completed successfully",
-            transaction_id=result["transaction_id"],
-            total_time_ms=total_time,
-            schema_validation_ms=schema_validation_time,
-            processing_time_ms=processing_time
-        )
-        
-        return create_success_response(result, correlation_id)
-    
     except Exception as e:
         total_time = (time.time() - start_time) * 1000
         logger.error(
