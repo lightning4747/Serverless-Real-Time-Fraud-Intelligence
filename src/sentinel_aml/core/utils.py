@@ -215,3 +215,16 @@ def sanitize_for_logging(data: Dict[str, Any]) -> Dict[str, Any]:
             sanitized[key] = value
     
     return sanitized
+
+
+def setup_logging(name: str):
+    """Setup logging for a module."""
+    import logging
+    
+    # Configure basic logging if not already configured
+    logging.basicConfig(
+        level=logging.INFO,
+        format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+    )
+    
+    return logging.getLogger(name)

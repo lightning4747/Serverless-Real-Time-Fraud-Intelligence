@@ -34,6 +34,10 @@ dependencies = [
     "boto3>=1.34.0",
     "botocore>=1.34.0",
     
+    # Security and encryption
+    "cryptography>=41.0.0",
+    "requests>=2.31.0",
+    
     # Graph and ML libraries
     "gremlinpython>=3.7.0",
     "numpy>=1.24.0",
