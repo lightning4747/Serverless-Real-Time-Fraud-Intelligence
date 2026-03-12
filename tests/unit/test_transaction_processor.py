@@ -386,6 +386,7 @@ class TestProcessTransaction:
         }
         return TransactionRequest(data)
     
+    @pytest.mark.asyncio
     @patch('sentinel_aml.lambdas.transaction_processor.get_connection_pool')
     @patch('sentinel_aml.lambdas.transaction_processor.ensure_account_exists')
     async def test_successful_transaction_processing(self, mock_ensure_account, mock_get_pool, mock_transaction_request):
@@ -417,6 +418,7 @@ class TestProcessTransaction:
         mock_client.create_transaction.assert_called_once()
         mock_client.create_transaction_edge.assert_called_once()
     
+    @pytest.mark.asyncio
     @patch('sentinel_aml.lambdas.transaction_processor.get_connection_pool')
     async def test_connection_pool_error(self, mock_get_pool, mock_transaction_request):
         """Test connection pool error handling."""
@@ -429,6 +431,7 @@ class TestProcessTransaction:
 class TestEnsureAccountExists:
     """Test account existence checking and creation."""
     
+    @pytest.mark.asyncio
     @patch('sentinel_aml.lambdas.transaction_processor.hash_pii')
     async def test_create_new_account(self, mock_hash_pii):
         """Test creating new account when it doesn't exist."""
@@ -460,6 +463,7 @@ class TestEnsureAccountExists:
         assert created_account.account_type == AccountType.CHECKING
         assert created_account.risk_score == 0.2
     
+    @pytest.mark.asyncio
     async def test_account_already_exists(self):
         """Test when account already exists."""
         # Mock connection pool and client

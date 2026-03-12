@@ -14,8 +14,8 @@ class TestSettings:
         settings = Settings()
         
         assert settings.app_name == "Sentinel-AML"
-        assert settings.environment == "development"
-        assert settings.log_level == "INFO"
+        assert settings.environment == "test"  # Set by conftest.py
+        assert settings.log_level == "DEBUG"  # Set by conftest.py
         assert settings.aws_region == "us-east-1"
         assert settings.neptune_port == 8182
         assert settings.gnn_model_threshold == 0.7
