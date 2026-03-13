@@ -1,0 +1,25 @@
+{
+  "environment": "development",
+  "notification_email": "dev-team@sentinel-aml.com",
+  "enable_deletion_protection": false,
+  "backup_retention_days": 7,
+  "monitoring_level": "basic",
+  "auto_scaling_enabled": false,
+  "vpc_cidr": "10.0.0.0/16",
+  "neptune_instance_class": "db.t3.medium",
+  "lambda_memory_size": 512,
+  "lambda_timeout_seconds": 300,
+  "api_throttling": {
+    "burst_limit": 100,
+    "rate_limit": 50
+  },
+  "step_functions_timeout_minutes": 15,
+  "cloudwatch_log_retention_days": 7,
+  "enable_x_ray_tracing": true,
+  "cost_allocation_tags": {
+    "Environment": "development",
+    "Project": "Sentinel-AML",
+    "Owner": "dev-team",
+    "CostCenter": "engineering"
+  }
+}

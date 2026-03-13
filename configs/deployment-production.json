@@ -1,0 +1,43 @@
+{
+  "environment": "production",
+  "notification_email": "ops-team@sentinel-aml.com",
+  "enable_deletion_protection": true,
+  "backup_retention_days": 30,
+  "monitoring_level": "detailed",
+  "auto_scaling_enabled": true,
+  "vpc_cidr": "10.1.0.0/16",
+  "neptune_instance_class": "db.r5.xlarge",
+  "lambda_memory_size": 1024,
+  "lambda_timeout_seconds": 900,
+  "api_throttling": {
+    "burst_limit": 1000,
+    "rate_limit": 500
+  },
+  "step_functions_timeout_minutes": 30,
+  "cloudwatch_log_retention_days": 90,
+  "enable_x_ray_tracing": true,
+  "multi_az_deployment": true,
+  "enable_enhanced_monitoring": true,
+  "backup_window": "03:00-04:00",
+  "maintenance_window": "sun:04:00-sun:05:00",
+  "cost_allocation_tags": {
+    "Environment": "production",
+    "Project": "Sentinel-AML",
+    "Owner": "ops-team",
+    "CostCenter": "compliance",
+    "BusinessUnit": "risk-management"
+  },
+  "security": {
+    "enable_vpc_flow_logs": true,
+    "enable_config_rules": true,
+    "enable_guardduty": true,
+    "enable_security_hub": true
+  },
+  "compliance": {
+    "enable_cloudtrail": true,
+    "enable_config": true,
+    "data_retention_years": 7,
+    "encryption_at_rest": true,
+    "encryption_in_transit": true
+  }
+}
