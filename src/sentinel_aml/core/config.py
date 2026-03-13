@@ -46,6 +46,7 @@ class Settings(BaseSettings):
     jwt_secret_key: Optional[str] = Field(default=None, description="JWT secret key")
     jwt_algorithm: str = Field(default="HS256", description="JWT algorithm")
     jwt_expiration_hours: int = Field(default=24, description="JWT expiration in hours")
+    external_id: Optional[str] = Field(default=None, description="External ID for IAM role assumption")
     
     # ML Configuration
     gnn_model_threshold: float = Field(default=0.7, description="GNN risk score threshold for flagging")
