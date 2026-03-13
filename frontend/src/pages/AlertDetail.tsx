@@ -333,7 +333,15 @@ export const AlertDetail: React.FC = () => {
           <div className="flex items-center space-x-2">
             <Clock className="h-4 w-4 text-gray-400" />
             <span className="text-gray-600">Created:</span>
-            <span>{formatDistanceToNow(new Date(alert.created_at), { addSuffix: true })}</span>
+            <span>{(() => {
+              try {
+                const date = new Date(alert.created_at)
+                if (isNaN(date.getTime())) return 'Recently'
+                return formatDistanceToNow(date, { addSuffix: true })
+              } catch (e) {
+                return 'Recently'
+              }
+            })()}</span>
           </div>
           
           <div className="flex items-center space-x-2">
@@ -527,7 +535,15 @@ export const AlertDetail: React.FC = () => {
                   <div className="text-xs text-gray-600">
                     <div>From: {transaction.from_account_id}</div>
                     <div>To: {transaction.to_account_id}</div>
-                    <div>{format(new Date(transaction.timestamp), 'MMM dd, yyyy HH:mm')}</div>
+                    <div>{(() => {
+                      try {
+                        const date = new Date(transaction.timestamp)
+                        if (isNaN(date.getTime())) return 'Time unavailable'
+                        return format(date, 'MMM dd, yyyy HH:mm')
+                      } catch (e) {
+                        return 'Time unavailable'
+                      }
+                    })()}</div>
                   </div>
                 </div>
               ))}

@@ -34,21 +34,25 @@ import {
 } from 'recharts'
 import { format, subDays } from 'date-fns'
 import { clsx } from 'clsx'
+import { TransactionChart } from '../components/TransactionChart'
 
 export const Analytics: React.FC = () => {
   const { api } = useApi()
   const [analyticsData, setAnalyticsData] = useState<AnalyticsData | null>(null)
   const [loadingState, setLoadingState] = useState<LoadingState>({ isLoading: true })
   const [timeRange, setTimeRange] = useState<'7d' | '30d' | '90d' | '1y'>('30d')
-  const [selectedMetric, setSelectedMetric] = useState<'alerts' | 'transactions' | 'risk_score'>('alerts')
 
   useEffect(() => {
-    loadAnalyticsData()
+    loadAnalyticsData(true)
+    
+    // Auto-refresh for real-time analytics
+    const interval = setInterval(() => loadAnalyticsData(false), 3000)
+    return () => clearInterval(interval)
   }, [timeRange])
 
-  const loadAnalyticsData = async () => {
+  const loadAnalyticsData = async (initial = false) => {
     try {
-      setLoadingState({ isLoading: true })
+      if (initial) setLoadingState({ isLoading: true })
       
       const response = await api.get(`/analytics?period=${timeRange}`)
       setAnalyticsData(response.data.data)
@@ -185,7 +189,7 @@ export const Analytics: React.FC = () => {
           </select>
           
           <button
-            onClick={loadAnalyticsData}
+            onClick={() => loadAnalyticsData(true)}
             disabled={loadingState.isLoading}
             className="btn btn-secondary"
           >
@@ -268,75 +272,53 @@ export const Analytics: React.FC = () => {
           </div>
 
           {/* Time Series Charts */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             {/* Alerts and Transactions Trend */}
-            <div className="card p-6">
-              <div className="flex justify-between items-center mb-4">
-                <h3 className="text-lg font-semibold text-gray-900">Alerts & Transactions Trend</h3>
-                <div className="flex space-x-2">
-                  {(['alerts', 'transactions', 'risk_score'] as const).map((metric) => (
-                    <button
-                      key={metric}
-                      onClick={() => setSelectedMetric(metric)}
-                      className={clsx(
-                        'px-3 py-1 text-xs rounded-full transition-colors',
-                        selectedMetric === metric
-                          ? 'bg-primary-100 text-primary-700'
-                          : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                      )}
-                    >
-                      {metric.replace('_', ' ')}
-                    </button>
-                  ))}
+            <div className="lg:col-span-2 card p-6">
+              <div className="flex justify-between items-center mb-6">
+                <div>
+                  <h3 className="text-lg font-bold text-gray-900 tracking-tight">Intelligence & Traffic Trends</h3>
+                  <p className="text-xs text-gray-400 font-medium">Monitoring system load and detection patterns</p>
                 </div>
               </div>
               
-              <div className="h-64">
-                <ResponsiveContainer width="100%" height="100%">
-                  <ComposedChart data={analyticsData.time_series}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-                    <XAxis dataKey="date" stroke="#6b7280" fontSize={12} />
-                    <YAxis yAxisId="left" stroke="#6b7280" fontSize={12} />
-                    <YAxis yAxisId="right" orientation="right" stroke="#6b7280" fontSize={12} />
-                    <Tooltip content={<CustomTooltip />} />
-                    <Legend />
-                    
-                    <Bar yAxisId="left" dataKey="alerts" fill="#ef4444" name="Alerts" />
-                    <Line 
-                      yAxisId="right" 
-                      type="monotone" 
-                      dataKey="risk_score_avg" 
-                      stroke="#f59e0b" 
-                      strokeWidth={2}
-                      name="Avg Risk Score"
-                    />
-                  </ComposedChart>
-                </ResponsiveContainer>
+              <div className="h-[400px]">
+                <TransactionChart />
               </div>
             </div>
 
             {/* Risk Distribution */}
-            <div className="card p-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">Risk Level Distribution</h3>
+            <div className="lg:col-span-1 card p-6">
+              <h3 className="text-lg font-bold text-gray-900 mb-6 tracking-tight">Risk Level Distribution</h3>
               
-              <div className="h-64">
+              <div className="h-[400px]">
                 <ResponsiveContainer width="100%" height="100%">
                   <RechartsPieChart>
                     <Pie
                       data={analyticsData.risk_distribution}
                       cx="50%"
-                      cy="50%"
+                      cy="45%"
+                      innerRadius={80}
+                      outerRadius={110}
+                      paddingAngle={5}
                       labelLine={false}
-                      label={({ level, percentage }) => `${level}: ${percentage.toFixed(1)}%`}
-                      outerRadius={80}
-                      fill="#8884d8"
+                      label={({ name, percentage }) => `${percentage.toFixed(0)}%`}
+                      stroke="none"
                       dataKey="count"
                     >
                       {analyticsData.risk_distribution.map((entry, index) => (
                         <Cell key={`cell-${index}`} fill={COLORS[entry.level as keyof typeof COLORS]} />
                       ))}
                     </Pie>
-                    <Tooltip />
+                    <Tooltip 
+                      contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 30px rgba(0,0,0,0.1)' }}
+                    />
+                    <Legend 
+                      verticalAlign="bottom" 
+                      align="center"
+                      iconType="circle"
+                      formatter={(value) => <span className="text-xs font-bold text-gray-600 uppercase tracking-tighter">{value}</span>}
+                    />
                   </RechartsPieChart>
                 </ResponsiveContainer>
               </div>

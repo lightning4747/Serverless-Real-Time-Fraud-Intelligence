@@ -27,18 +27,17 @@ export const Dashboard: React.FC = () => {
   const [loadingState, setLoadingState] = useState<LoadingState>({ isLoading: true })
 
   useEffect(() => {
-    loadDashboardData()
+    loadDashboardData(true)
     
-    // Set up auto-refresh every 30 seconds
-    const interval = setInterval(loadDashboardData, 30000)
+    // Set up auto-refresh every 3 seconds for real-time feel
+    const interval = setInterval(() => loadDashboardData(false), 3000)
     return () => clearInterval(interval)
   }, [])
 
-  const loadDashboardData = async () => {
+  const loadDashboardData = async (initial = false) => {
     try {
-      setLoadingState({ isLoading: true })
+      if (initial) setLoadingState({ isLoading: true })
       
-      // Load metrics and recent alerts in parallel
       const [metricsResponse, alertsResponse] = await Promise.all([
         api.get('/dashboard/metrics'),
         api.get('/alerts?limit=5&sort=created_at&order=desc')
@@ -218,7 +217,9 @@ export const Dashboard: React.FC = () => {
               View Analytics <ArrowUpRight className="h-4 w-4 ml-1" />
             </Link>
           </div>
-          <TransactionChart />
+          <div className="h-[320px]">
+            <TransactionChart />
+          </div>
         </div>
         <div className="card p-6">
           <RealTimePredictions />

@@ -108,7 +108,15 @@ export const AlertsList: React.FC<AlertsListProps> = ({ alerts, compact = false 
                 
                 <div className="flex items-center space-x-1 text-gray-500">
                   <Clock className="h-3 w-3" />
-                  <span>{formatDistanceToNow(new Date(alert.created_at), { addSuffix: true })}</span>
+                  <span>{(() => {
+                    try {
+                      const date = new Date(alert.created_at)
+                      if (isNaN(date.getTime())) return 'Just now'
+                      return formatDistanceToNow(date, { addSuffix: true })
+                    } catch (e) {
+                      return 'Just now'
+                    }
+                  })()}</span>
                 </div>
                 
                 {alert.assigned_to && (
