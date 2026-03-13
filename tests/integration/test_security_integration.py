@@ -2,11 +2,13 @@
 
 import pytest
 from datetime import datetime, timezone, timedelta
-from unittest.mock import Mock, patch
+from unittest.mock import Mock, patch, MagicMock
+import json
 
 from sentinel_aml.security.encryption import get_encryption_service
 from sentinel_aml.security.pii_protection import get_pii_service
-from sentinel_aml.security.access_control import get_access_control_service, Role, Permission
+from sentinel_aml.security.access_control import get_access_control_service, Role, Permission, User
+from sentinel_aml.security.iam_integration import get_iam_integration_service
 from sentinel_aml.compliance.audit_logger import get_audit_logger, AuditEventType
 
 
@@ -20,6 +22,22 @@ class TestSecurityIntegration:
         mock_client.generate_data_key.return_value = {
             'Plaintext': b'a' * 32,  # 32-byte key for AES-256
             'CiphertextBlob': b'encrypted_key_data'
+        }
+        return mock_client
+    
+    @pytest.fixture
+    def mock_iam_client(self):
+        """Mock IAM client for testing."""
+        mock_client = Mock()
+        mock_client.create_role.return_value = {
+            'Role': {
+                'Arn': 'arn:aws:iam::123456789012:role/test-role'
+            }
+        }
+        mock_client.create_policy.return_value = {
+            'Policy': {
+                'Arn': 'arn:aws:iam::123456789012:policy/test-policy'
+            }
         }
         return mock_client
     
@@ -72,6 +90,41 @@ class TestSecurityIntegration:
                 assert masked_data["account_number"] == "************3456"
                 assert "***-**-6789" == masked_data["ssn"]
                 assert masked_data["email"] == "j***e@example.com"
+    
+    def test_encryption_with_audit_logging(self, mock_kms_client):
+        """Test that encryption operations are properly audited."""
+        with patch('boto3.client', return_value=mock_kms_client):
+            with patch('sentinel_aml.security.encryption.get_settings') as mock_settings:
+                with patch('sentinel_aml.compliance.audit_storage.get_audit_storage') as mock_storage:
+                    mock_settings.return_value.encryption_key_id = 'test-key'
+                    mock_settings.return_value.aws_region = 'us-east-1'
+                    
+                    mock_storage_instance = Mock()
+                    mock_storage.return_value = mock_storage_instance
+                    
+                    encryption_service = get_encryption_service()
+                    
+                    # Encrypt PII record
+                    sensitive_data = {
+                        "customer_name": "Jane Smith",
+                        "account_number": "9876543210",
+                        "amount": 5000.00
+                    }
+                    
+                    encrypted_data = encryption_service.encrypt_pii_record(sensitive_data)
+                    
+                    # Verify audit log was created
+                    assert mock_storage_instance.store_audit_record.called
+                    
+                    # Get the stored event
+                    stored_event = mock_storage_instance.store_audit_record.call_args[0][0]
+                    
+                    # Verify encryption audit details
+                    assert stored_event.event_type == AuditEventType.DATA_ENCRYPTED
+                    assert stored_event.action == "encrypt_pii_record"
+                    assert "encrypted_fields" in stored_event.details
+                    assert "encryption_algorithm" in stored_event.details
+                    assert stored_event.details["encryption_algorithm"] == "AES-256-GCM"
     
     def test_audit_logging_with_pii_protection(self):
         """Test audit logging automatically protects PII."""

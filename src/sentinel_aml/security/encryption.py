@@ -168,16 +168,38 @@ class EncryptionService:
         }
         
         encrypted_record = record.copy()
+        encrypted_fields = []
         
         for field_name, value in record.items():
             if field_name.lower() in pii_fields and value is not None:
                 try:
                     encrypted_record[field_name] = self.encrypt_field(field_name, value)
+                    encrypted_fields.append(field_name)
                     logger.debug(f"Encrypted field: {field_name}")
                 except Exception as e:
                     logger.warning(f"Failed to encrypt field {field_name}: {e}")
                     # Keep original value if encryption fails
                     encrypted_record[field_name] = value
+        
+        # Log encryption event for audit compliance
+        if encrypted_fields:
+            try:
+                from sentinel_aml.compliance.audit_logger import get_audit_logger, AuditEventType
+                audit_logger = get_audit_logger()
+                audit_logger.log_event(
+                    event_type=AuditEventType.DATA_ENCRYPTED,
+                    action="encrypt_pii_record",
+                    outcome="SUCCESS",
+                    details={
+                        "encrypted_fields": encrypted_fields,
+                        "encryption_algorithm": "AES-256-GCM",
+                        "key_source": "AWS_KMS",
+                        "total_fields_encrypted": len(encrypted_fields)
+                    },
+                    data_classification="restricted"
+                )
+            except Exception as e:
+                logger.warning(f"Failed to log encryption audit event: {e}")
         
         return encrypted_record
     
@@ -190,16 +212,39 @@ class EncryptionService:
         }
         
         decrypted_record = encrypted_record.copy()
+        decrypted_fields = []
         
         for field_name, value in encrypted_record.items():
             if field_name.lower() in pii_fields and value is not None:
                 try:
                     decrypted_record[field_name] = self.decrypt_field(field_name, value)
+                    decrypted_fields.append(field_name)
                     logger.debug(f"Decrypted field: {field_name}")
                 except Exception as e:
                     logger.warning(f"Failed to decrypt field {field_name}: {e}")
                     # Keep encrypted value if decryption fails
                     decrypted_record[field_name] = value
+        
+        # Log decryption event for audit compliance
+        if decrypted_fields:
+            try:
+                from sentinel_aml.compliance.audit_logger import get_audit_logger, AuditEventType
+                audit_logger = get_audit_logger()
+                audit_logger.log_event(
+                    event_type=AuditEventType.DATA_DECRYPTED,
+                    action="decrypt_pii_record",
+                    outcome="SUCCESS",
+                    details={
+                        "decrypted_fields": decrypted_fields,
+                        "encryption_algorithm": "AES-256-GCM",
+                        "key_source": "AWS_KMS",
+                        "total_fields_decrypted": len(decrypted_fields)
+                    },
+                    data_classification="restricted",
+                    compliance_flags=["PII_ACCESS", "DECRYPTION_EVENT"]
+                )
+            except Exception as e:
+                logger.warning(f"Failed to log decryption audit event: {e}")
         
         return decrypted_record
 

@@ -48,6 +48,11 @@ class AuditEventType(str, Enum):
     CONFIGURATION_CHANGED = "configuration_changed"
     MODEL_DEPLOYED = "model_deployed"
     
+    # Compliance and Security
+    COMPLIANCE_CHECK = "compliance_check"
+    AUDIT_READ = "audit_read"
+    SECURITY_VALIDATION = "security_validation"
+    
     # Compliance Events
     AUDIT_REPORT_GENERATED = "audit_report_generated"
     REGULATORY_INQUIRY = "regulatory_inquiry"

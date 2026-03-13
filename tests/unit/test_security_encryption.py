@@ -143,6 +143,23 @@ class TestEncryptionIntegration:
     """Integration tests for encryption with other components."""
     
     @pytest.fixture
+    def mock_kms_client(self):
+        """Mock KMS client for testing."""
+        mock_client = Mock()
+        mock_client.generate_data_key.return_value = {
+            'Plaintext': b'a' * 32,  # 32-byte key for AES-256
+            'CiphertextBlob': b'encrypted_key_data'
+        }
+        return mock_client
+    
+    @pytest.fixture
+    def encryption_service(self, mock_kms_client):
+        """Create encryption service with mocked KMS."""
+        with patch('boto3.client', return_value=mock_kms_client):
+            service = EncryptionService(kms_key_id='test-key-id')
+            return service
+    
+    @pytest.fixture
     def mock_settings(self):
         """Mock settings for testing."""
         settings = Mock()
