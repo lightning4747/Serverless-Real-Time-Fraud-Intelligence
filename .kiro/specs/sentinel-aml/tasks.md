@@ -209,7 +209,7 @@ This implementation plan breaks down the Sentinel-AML system into discrete codin
     - Add investigation workflow APIs
     - _Requirements: 10.1, 10.2, 10.3, 10.4, 10.5_
   
-  - [-] 12.2 Create dashboard frontend (React/HTML)
+  - [x] 12.2 Create dashboard frontend (React/HTML)
     - Build responsive web interface for alert management
     - Implement transaction graph visualization
     - Add case management and investigation tools
