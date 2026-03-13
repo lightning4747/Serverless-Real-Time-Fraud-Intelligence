@@ -99,35 +99,35 @@ This implementation plan breaks down the Sentinel-AML system into discrete codin
     - **Property 6: PII protection - Generated reports must not contain raw PII**
     - **Validates: Requirements 4.4, 8.3**
   
-  - [ ] 6.3 Add report formatting and validation
+  - [x] 6.3 Add report formatting and validation
     - Implement FinCEN SAR format compliance checking
     - Add report versioning and audit trail
     - Create confidence scoring for suspicious patterns
     - _Requirements: 4.2, 4.3, 4.5, 7.1, 7.3_
   
-  - [ ] 6.4 Write integration tests for Bedrock integration
+  - [x] 6.4 Write integration tests for Bedrock integration
     - Test end-to-end SAR generation workflow
     - Test error handling and retry logic
     - _Requirements: 4.1, 4.2, 4.5_
 
 - [ ] 7. Implement Step Functions orchestration
-  - [ ] 7.1 Create Step Functions state machine definition
+  - [x] 7.1 Create Step Functions state machine definition
     - Design workflow: Transaction → GNN Analysis → SAR Generation
     - Implement error handling and retry policies
     - Add execution logging and monitoring
     - _Requirements: 5.1, 5.2, 5.3, 5.4_
   
-  - [ ] 7.2 Implement orchestration Lambda triggers
+  - [x] 7.2 Implement orchestration Lambda triggers
     - Create Lambda functions to trigger Step Functions execution
     - Add event-driven processing from transaction ingestion
     - Implement workflow status tracking and notifications
     - _Requirements: 5.1, 5.2, 5.5_
   
-  - [ ] 7.3 Write property tests for orchestration
+  - [x] 7.3 Write property tests for orchestration
     - **Property 7: Workflow completeness - All suspicious transactions must trigger complete workflow**
     - **Validates: Requirements 5.1, 5.2**
   
-  - [ ] 7.4 Write integration tests for Step Functions
+  - [x] 7.4 Write integration tests for Step Functions
     - Test complete end-to-end workflow execution
     - Test error scenarios and retry behavior
     - _Requirements: 5.1, 5.2, 5.3, 5.4_
@@ -136,50 +136,50 @@ This implementation plan breaks down the Sentinel-AML system into discrete codin
   - Ensure all tests pass, ask the user if questions arise.
 
 - [ ] 9. Implement API Gateway REST endpoints
-  - [ ] 9.1 Create API Gateway configuration with CDK
+  - [x] 9.1 Create API Gateway configuration with CDK
     - Define REST API structure with proper resource hierarchy
     - Implement API key authentication and rate limiting
     - Add CORS configuration and request validation
     - _Requirements: 6.1, 6.2, 6.3, 6.4, 6.5, 6.6_
   
-  - [ ] 9.2 Implement alerts and reports endpoints
+  - [x] 9.2 Implement alerts and reports endpoints
     - Create GET /alerts endpoint for suspicious activity retrieval
     - Create GET /reports/{id} endpoint for SAR access
     - Add pagination, filtering, and search capabilities
     - Implement proper HTTP status codes and error responses
     - _Requirements: 6.2, 6.3, 6.4, 6.6_
   
-  - [ ] 9.3 Write property tests for API endpoints
+  - [x] 9.3 Write property tests for API endpoints
     - **Property 8: Authentication - All protected endpoints must require valid API keys**
     - **Validates: Requirements 6.4, 6.6**
     - **Property 9: Rate limiting - API calls must respect configured limits**
     - **Validates: Requirements 6.5**
   
-  - [ ] 9.4 Write integration tests for API Gateway
+  - [x] 9.4 Write integration tests for API Gateway
     - Test all endpoints with various authentication scenarios
     - Test rate limiting and error responses
     - _Requirements: 6.1, 6.2, 6.3, 6.4, 6.5, 6.6_
 
 - [ ] 10. Implement security and compliance features
-  - [ ] 10.1 Add encryption and data protection
+  - [x] 10.1 Add encryption and data protection
     - Implement AES-256 encryption for data at rest
     - Configure TLS 1.3 for data in transit
     - Add PII masking for non-essential operations
     - _Requirements: 8.1, 8.2, 8.3_
   
-  - [ ] 10.2 Implement audit logging and compliance
+  - [x] 10.2 Implement audit logging and compliance
     - Create comprehensive audit trail system
     - Add immutable logging with 7-year retention
     - Implement audit report generation
     - _Requirements: 7.1, 7.2, 7.3, 7.4, 7.5_
   
-  - [ ] 10.3 Add role-based access controls
+  - [x] 10.3 Add role-based access controls
     - Implement IAM roles and policies for all components
     - Add least-privilege access controls
     - Create user management and authorization
     - _Requirements: 8.4_
   
-  - [ ] 10.4 Write security tests
+  - [x] 10.4 Write security tests
     - Test encryption and data protection mechanisms
     - Test access controls and authorization
     - _Requirements: 8.1, 8.2, 8.3, 8.4_
@@ -209,7 +209,7 @@ This implementation plan breaks down the Sentinel-AML system into discrete codin
     - Add investigation workflow APIs
     - _Requirements: 10.1, 10.2, 10.3, 10.4, 10.5_
   
-  - [ ] 12.2 Create dashboard frontend (React/HTML)
+  - [-] 12.2 Create dashboard frontend (React/HTML)
     - Build responsive web interface for alert management
     - Implement transaction graph visualization
     - Add case management and investigation tools
@@ -264,19 +264,19 @@ This implementation plan breaks down the Sentinel-AML system into discrete codin
     - _Requirements: 12.1, 12.2, 12.3_
 
 - [ ] 15. Deploy infrastructure with AWS CDK
-  - [ ] 15.1 Complete CDK infrastructure deployment
+  - [x] 15.1 Complete CDK infrastructure deployment
     - Deploy all AWS resources (Neptune, Lambda, API Gateway, Step Functions)
     - Configure networking, security groups, and IAM roles
     - Set up monitoring, logging, and alerting infrastructure
     - _Requirements: All requirements depend on proper infrastructure_
   
-  - [ ] 15.2 Create deployment scripts and automation
+  - [x] 15.2 Create deployment scripts and automation
     - Implement CI/CD pipeline for automated deployments
     - Add environment-specific configuration management
     - Create deployment validation and rollback procedures
     - _Requirements: All requirements_
   
-  - [ ] 15.3 Write deployment tests
+  - [x] 15.3 Write deployment tests
     - Test infrastructure provisioning and configuration
     - Test deployment automation and rollback
     - _Requirements: All requirements_
